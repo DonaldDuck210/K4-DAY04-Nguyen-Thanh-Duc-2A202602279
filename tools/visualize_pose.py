@@ -34,11 +34,21 @@ def side_color(index: int) -> tuple[int, int, int]:
 
 
 def draw_image(image_path: Path, label_path: Path, output_path: Path, show_names: bool) -> int:
-    from PIL import Image, ImageDraw
+    try:
+        from importlib import import_module
 
-    image = Image.open(image_path).convert("RGB")
+        image_module = import_module("PIL.Image")
+        draw_module = import_module("PIL.ImageDraw")
+    except ModuleNotFoundError as error:
+        if error.name == "PIL" or error.name.startswith("PIL."):
+            raise RuntimeError(
+                "Pillow is required. Install it with: python -m pip install Pillow"
+            ) from error
+        raise
+
+    image = image_module.open(image_path).convert("RGB")
     width, height = image.size
-    canvas = ImageDraw.Draw(image)
+    canvas = draw_module.Draw(image)
     people = parse_yolo_pose_file(label_path)
 
     for person in people:
